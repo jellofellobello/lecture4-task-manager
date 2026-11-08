@@ -1,0 +1,35 @@
+name: GitHub Projects Automation
+
+on:
+  pull_request:
+    types:
+      - closed
+
+permissions:
+  pull-requests: read
+  issues: read
+
+jobs:
+  move-issue-to-done:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check merged PR and linked issue
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          echo "Pull request merged successfully."
+          echo "PR: $PR_TITLE"
+          echo "Checking the linked issue reference:"
+          printf '%s\n' "$PR_BODY"
+
+          if printf '%s\n' "$PR_BODY" | grep -Eiq '(close|closes|fix|fixes|resolve|resolves) #[0-9]+'; then
+            echo "A closing issue reference was found."
+            echo "GitHub will close the linked issue."
+            echo "Project status automation should move it to Done."
+          else
+            echo "No closing issue reference found."
+            echo "Check the PR description."
+          fi
